@@ -88,6 +88,7 @@ describe("favourites", () => {
     }
   });
 
+
   it("Friend", async () => {
     // The Anchor framework will automatically sign the transaction with the user's keypair.
     // We want to sign with a different keypair, so we need to create a new keypair and request some funds.
@@ -125,5 +126,46 @@ describe("favourites", () => {
     );
     assert.equal(favouritesAccount.color, 'blue');
     assert.deepEqual(favouritesAccount.hobbies, ['scooter']);
+  });
+
+  it("Bad friend", async () => {
+    // The Anchor framework will automatically sign the transaction with the user's keypair.
+    // We want to sign with a different keypair, so we need to create a new keypair and request some funds.
+    const otherUser = anchor.web3.Keypair.generate();
+    await provider.connection.requestAirdrop(otherUser.publicKey, 1000000000);
+
+    // Wait for the funds to be available.
+    await new Promise((r) => setTimeout(r, 400));
+
+    try {
+      // Execute the instruction on the local network.
+      await program.methods
+        .create(new anchor.BN(8), "blue", ["scooter"])
+        .accounts({
+          user: otherUser.publicKey,
+        })
+        .signers([user])
+        .rpc();
+
+      // If the transaction is successful, the test should fail.
+      assert.fail("This should not happen");
+    } catch (error) {
+      // Check if the error message contains the expected error.
+      assert.isTrue(error.toString().includes("Missing signature for public key"));
+    }
+
+    // Generate the address of the Favourites account of the otherUse0 that should not exist.
+    const [favouritesAddress, _] =
+      anchor.web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("favourites"), otherUser.publicKey.toBuffer()],
+        program.programId
+      );
+
+    // Fetch the Favourites account of the otherUser from the network.
+    const favouritesAccount = await program.account.favourites.fetchNullable(
+      favouritesAddress
+    );
+
+    assert.isNull(favouritesAccount);
   });
 });
