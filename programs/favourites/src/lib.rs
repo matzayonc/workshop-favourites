@@ -8,7 +8,7 @@ declare_id!("7eLAo756veqmTo4192BLmjTW3pfeZMQYjis1zU6SLX64");
 pub mod favourites {
     use super::*;
 
-    pub fn initialize(
+    pub fn create(
         ctx: Context<Initialize>,
         number: u64,
         color: String,
