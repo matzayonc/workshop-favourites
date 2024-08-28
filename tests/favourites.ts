@@ -129,8 +129,7 @@ describe("favourites", () => {
   });
 
   it("Bad friend", async () => {
-    // The Anchor framework will automatically sign the transaction with the user's keypair.
-    // We want to sign with a different keypair, so we need to create a new keypair and request some funds.
+    // We want to sign with a different keypair, to trigger an error.
     const otherUser = anchor.web3.Keypair.generate();
     await provider.connection.requestAirdrop(otherUser.publicKey, 1000000000);
 
@@ -139,6 +138,7 @@ describe("favourites", () => {
 
     try {
       // Execute the instruction on the local network.
+      // Execution should fail because the user keypair is not included in the signers array.
       await program.methods
         .create(new anchor.BN(8), "blue", ["scooter"])
         .accounts({
@@ -166,6 +166,7 @@ describe("favourites", () => {
       favouritesAddress
     );
 
+    // Check to be sure that the account does not exist.
     assert.isNull(favouritesAccount);
   });
 });
